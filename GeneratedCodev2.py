@@ -103,7 +103,7 @@ window.onload = Setting;
     contents = contents.replace(
         "customHeight", str(data['windows_height']))
     contents = contents.replace(
-        "innerFlag", str(data['windows_height']))
+        "innerFlag", str(data['innerFlag']))
     f.write(contents)
     f.close()
 
@@ -111,8 +111,8 @@ window.onload = Setting;
 def main():
     print('project started!')
     settingData = {
-        'windows_width': 1500,
-        'windows_height': 800,
+        'windows_width': 800,
+        'windows_height': 700,
         'innerFlag': 'true'  # false or true
     }
     generateManifestJson(settingData)

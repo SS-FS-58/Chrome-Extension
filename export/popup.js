@@ -10,15 +10,15 @@ chrome.tabs.query({ active: true }, function (t) {
 
 function Setting() {
   heightDelta = outerHeight - innerHeight;
-  var w = Number(1500);
-  var h = Number(800);
-  if (800) {
+  var w = Number(800);
+  var h = Number(700);
+  if (true) {
     h += heightDelta;
   }
-  let tooltipTxt = (800 ? "InnerSize:" : "OuterSize:").concat(
-    1500,
-    "*",
+  let tooltipTxt = (true ? "InnerSize:" : "OuterSize:").concat(
     800,
+    "*",
+    700,
     " "
   );
   document.getElementById("sizeTitle").innerHTML = tooltipTxt;

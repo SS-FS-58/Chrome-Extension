@@ -1,4 +1,5 @@
 
+
 {
   "manifest_version": 2,
   "name": "Screen size and Inner size spoofing",
@@ -20,3 +21,5 @@
     "webRequestBlocking"
     ]
 }
+
+    

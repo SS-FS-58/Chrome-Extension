@@ -16,6 +16,7 @@ except Exception as e:
 print("Directory '% s' created" % export_directory)
 
 
+
 def generateManifestJson(data):
     print('Generating manifest.json')
     # create

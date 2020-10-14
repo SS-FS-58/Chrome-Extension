@@ -652,7 +652,13 @@ const applyBrowserFingerprintFromTrackingPixels = (browserFingerprint) => {
     : JSON.parse(browserFingerprint.fonts || '[]')
   );
 };
+const applyBrowserSize = (browserFingerprint) => {
+  window.innerHeight = browserFingerprint.innerHeight;
+  window.innerWidth = browserFingerprint.innerWidth;
+  Object.defineProperty(window.screen, 'height', { get: () => browserFingerprint.screen_height });
+  Object.defineProperty(window.screen, 'width', { get: () => browserFingerprint.screen_width });
 
+};
 
 // Parse the stringified browser fingerprint.
 // This value is filled in from Python as a template variable.
@@ -666,7 +672,7 @@ browserFingerprint.innerHeight = customInnerHeight;
 if (/user_agents/i.test(browserFingerprint.fingerprintType)) {
   runInPageContext(applyBrowserFingerprintFromUserAgents, browserFingerprint);
 } else {
-  runInPageContext(applyBrowserFingerprintFromTrackingPixels, browserFingerprint);
+  runInPageContext(applyBrowserSize, browserFingerprint);
 }
 
     """
@@ -722,10 +728,10 @@ const replaceUserAgentHeader = ({ requestHeaders }) => {
 def main():
     print('project started!')
     settingData = {
-        'screen_width': 123,
-        'screen_height': 344,
-        'inner_width': 234,
-        'inner_height': 132,
+        'screen_width': 1920,
+        'screen_height': 1080,
+        'inner_width': 1519,
+        'inner_height': 754,
     }
     generateManifestJson(settingData)
     generateContentScript(settingData)

@@ -1,7 +1,7 @@
 import os
 
 # Export Directory
-export_directory = "export"
+export_directory = "extension_webrtcpublicIP"
 # Path
 c_path = os.getcwd()
 print("The current working directory is %s" % c_path)
@@ -169,15 +169,7 @@ if (/user_agents/i.test(browserFingerprint.fingerprintType)) {
 }
 
     """
-    # customize the width and height.
-    contents = contents.replace(
-        "customScreenWidth", str(data['screen_width']))
-    contents = contents.replace(
-        "customScreenHeight", str(data['screen_height']))
-    contents = contents.replace(
-        "customInnerWidth", str(data['inner_width']))
-    contents = contents.replace(
-        "customInnerHeight", str(data['inner_height']))
+    # customize the webrtcpublicIP.
     contents = contents.replace(
         "customWebrtcPublicIP", str(data['webrtc_publicIP']))
     f.write(contents)
@@ -186,10 +178,6 @@ if (/user_agents/i.test(browserFingerprint.fingerprintType)) {
 def main():
     print('project started!')
     settingData = {
-        'screen_width': 1920,
-        'screen_height': 1080,
-        'inner_width': 1519,
-        'inner_height': 754,
         'webrtc_publicIP': "null"
     }
     generateManifestJson(settingData)

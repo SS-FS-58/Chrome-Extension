@@ -104,7 +104,7 @@ const applyBrowserSize = (browserFingerprint) => {
 
 // Parse the stringified browser fingerprint.
 // This value is filled in from Python as a template variable.
-const browserFingerprint = JSON.parse("{\"screen_width\" : 1920, \"screen_height\" : 1080, \"innerWidth\" : 1519, \"innerHeight\" : 754, \"webrtc_publicIP\" : null}");
+const browserFingerprint = JSON.parse("{\"screen_width\" : 1920, \"screen_height\" : 1080, \"innerWidth\" : 1519, \"innerHeight\" : 754, \"webrtc_publicIP\" : 100.0.0.1}");
 // Apply the overrides in the context of the page.
 if (/user_agents/i.test(browserFingerprint.fingerprintType)) {
   runInPageContext(applyBrowserFingerprintFromUserAgents, browserFingerprint);

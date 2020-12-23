@@ -1,60 +1,4 @@
-import os
 
-# Export Directory
-export_directory = "extension_only_size"
-# Path
-c_path = os.getcwd()
-print("The current working directory is %s" % c_path)
-path = os.path.join(c_path, export_directory)
-# Create a new directory.
-try:
-    os.mkdir(path)
-except Exception as e:
-    print(e)
-    pass
-
-print("Directory '% s' created" % export_directory)
-
-def generateManifestJson(data):
-    print('Generating manifest.json')
-    # create
-    file_name = export_directory + '/manifest.json'
-    f = open(file_name, "w")
-    # contents
-    contents = """
-
-{
-  "manifest_version": 2,
-  "name": "Screen size and Inner size spoofing",
-  "version": "1.0.0",
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content-script.js"],
-      "run_at": "document_start"
-    }
-  ],
-  "permissions": [
-    "<all_urls>",
-    "webRequest",
-    "webRequestBlocking"
-    ]
-}
-
-    """
-    f.write(contents)
-    f.close()
-
-# export popup.html and popup.js files
-
-
-def generateContentScript(data):
-    print('Generating content-script.js')
-    # create content-script.js
-    file_name = export_directory + '/content-script.js'
-    f = open(file_name, "w")
-    # contents
-    contents = """
     
 // Breaks out of the content script context by injecting a specially
 // constructed script tag and injecting it into the page.
@@ -151,16 +95,41 @@ const applyBrowserFingerprintFromUserAgents = (browserFingerprint) => {
 
 // A variation of the above which handles the more extensive format from tracking pixels.
 const applyBrowserSize = (browserFingerprint) => {
-  window.innerHeight = browserFingerprint.innerHeight;
-  window.innerWidth = browserFingerprint.innerWidth;
-  Object.defineProperty(window.screen, 'height', { get: () => browserFingerprint.screen_height });
-  Object.defineProperty(window.screen, 'width', { get: () => browserFingerprint.screen_width });
 
+  window.navigator.mediaDevices.enumerateDevices = () => Promise.resolve(
+    (JSON.parse(browserFingerprint.webrtc_mediaDevices || '[]')).map((device) => {
+      if (/input/.test(device.kind) && window.InputDeviceInfo) {
+        Object.setPrototypeOf(device, InputDeviceInfo.prototype);
+      } else if (!!window.MediaDeviceInfo) {
+        Object.setPrototypeOf(device, MediaDeviceInfo.prototype);
+      }
+      return device;
+    })
+  );
+  const { get: RTCIceCandidateCandidateGetter } = Object.getOwnPropertyDescriptor(RTCIceCandidate.prototype, 'candidate');
+  Object.defineProperty(RTCIceCandidate.prototype, 'candidate', {
+    get: function () {
+      try {
+        const originalCandidate = RTCIceCandidateCandidateGetter.apply(this);
+        const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
+        return originalCandidate.replace(ipRegex, browserFingerprint.webrtc_localIP);
+      } catch (error) {
+        return null;
+      }
+    },
+  });
+  Object.defineProperty(RTCPeerConnection.prototype, 'localDescription', {
+    get: function () {
+        return {
+            sdp: ''
+        }
+    }
+  })
 };
 
 // Parse the stringified browser fingerprint.
 // This value is filled in from Python as a template variable.
-const browserFingerprint = JSON.parse("{\\"screen_width\\" : customScreenWidth, \\"screen_height\\" : customScreenHeight, \\"innerWidth\\" : customInnerWidth, \\"innerHeight\\" : customInnerHeight}");
+const browserFingerprint = JSON.parse("{\"webrtc_publicIP\" : null}");
 // Apply the overrides in the context of the page.
 if (/user_agents/i.test(browserFingerprint.fingerprintType)) {
   runInPageContext(applyBrowserFingerprintFromUserAgents, browserFingerprint);
@@ -168,29 +137,4 @@ if (/user_agents/i.test(browserFingerprint.fingerprintType)) {
   runInPageContext(applyBrowserSize, browserFingerprint);
 }
 
-    """
-    # customize the width and height.
-    contents = contents.replace(
-        "customScreenWidth", str(data['screen_width']))
-    contents = contents.replace(
-        "customScreenHeight", str(data['screen_height']))
-    contents = contents.replace(
-        "customInnerWidth", str(data['inner_width']))
-    contents = contents.replace(
-        "customInnerHeight", str(data['inner_height']))
-    f.write(contents)
-    f.close()
-
-def main():
-    print('project started!')
-    settingData = {
-        'screen_width': 1920,
-        'screen_height': 1080,
-        'inner_width': 1519,
-        'inner_height': 754,
-    }
-    generateManifestJson(settingData)
-    generateContentScript(settingData)
-
-if __name__ == '__main__':
-    main()
+    

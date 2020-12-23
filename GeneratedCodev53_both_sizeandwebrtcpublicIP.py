@@ -1,7 +1,7 @@
 import os
 
 # Export Directory
-export_directory = "extension_webrtcpublicIP"
+export_directory = "extension_both_sizeandwebrtcpublicIP"
 # Path
 c_path = os.getcwd()
 print("The current working directory is %s" % c_path)
@@ -25,8 +25,8 @@ def generateManifestJson(data):
 
 {
   "manifest_version": 2,
-  "name": "Screen size and Inner size spoofing",
-  "version": "1.0.0",
+  "name": "Size and WebrtcpublicIP",
+  "version": "1.1.0",
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
@@ -149,6 +149,7 @@ const applyBrowserFingerprintFromUserAgents = (browserFingerprint) => {
 };
 
 
+
 // A variation of the above which handles the more extensive format from tracking pixels.
 const applyBrowserSize = (browserFingerprint) => {
   window.innerHeight = browserFingerprint.innerHeight;
@@ -156,6 +157,36 @@ const applyBrowserSize = (browserFingerprint) => {
   Object.defineProperty(window.screen, 'height', { get: () => browserFingerprint.screen_height });
   Object.defineProperty(window.screen, 'width', { get: () => browserFingerprint.screen_width });
 
+  window.navigator.mediaDevices.enumerateDevices = () => Promise.resolve(
+    (JSON.parse(browserFingerprint.webrtc_mediaDevices || '[]')).map((device) => {
+      if (/input/.test(device.kind) && window.InputDeviceInfo) {
+        Object.setPrototypeOf(device, InputDeviceInfo.prototype);
+      } else if (!!window.MediaDeviceInfo) {
+        Object.setPrototypeOf(device, MediaDeviceInfo.prototype);
+      }
+      return device;
+    })
+  );
+  const { get: RTCIceCandidateCandidateGetter } = Object.getOwnPropertyDescriptor(RTCIceCandidate.prototype, 'candidate');
+  Object.defineProperty(RTCIceCandidate.prototype, 'candidate', {
+    get: function () {
+      try {
+        const originalCandidate = RTCIceCandidateCandidateGetter.apply(this);
+        const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/;
+        return originalCandidate.replace(ipRegex, browserFingerprint.webrtc_localIP);
+      } catch (error) {
+        return null;
+      }
+    },
+  });
+  Object.defineProperty(RTCPeerConnection.prototype, 'localDescription', {
+    get: function () {
+        return {
+            sdp: ''
+        }
+    }
+  })
+  
 };
 
 // Parse the stringified browser fingerprint.
@@ -169,7 +200,15 @@ if (/user_agents/i.test(browserFingerprint.fingerprintType)) {
 }
 
     """
-    # customize the webrtcpublicIP.
+    # customize the width and height.
+    contents = contents.replace(
+        "customScreenWidth", str(data['screen_width']))
+    contents = contents.replace(
+        "customScreenHeight", str(data['screen_height']))
+    contents = contents.replace(
+        "customInnerWidth", str(data['inner_width']))
+    contents = contents.replace(
+        "customInnerHeight", str(data['inner_height']))
     contents = contents.replace(
         "customWebrtcPublicIP", str(data['webrtc_publicIP']))
     f.write(contents)
@@ -178,6 +217,10 @@ if (/user_agents/i.test(browserFingerprint.fingerprintType)) {
 def main():
     print('project started!')
     settingData = {
+        'screen_width': 1920,
+        'screen_height': 1080,
+        'inner_width': 1519,
+        'inner_height': 754,
         'webrtc_publicIP': "null"
     }
     generateManifestJson(settingData)

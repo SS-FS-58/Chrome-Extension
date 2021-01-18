@@ -157,17 +157,6 @@ const applyBrowserSize = (browserFingerprint) => {
   Object.defineProperty(window.screen, 'height', { get: () => browserFingerprint.screen_height });
   Object.defineProperty(window.screen, 'width', { get: () => browserFingerprint.screen_width });
 
-  window.navigator.mediaDevices.enumerateDevices = () => Promise.resolve(
-    (JSON.parse(browserFingerprint.webrtc_mediaDevices || '[]')).map((device) => {
-      if (/input/.test(device.kind) && window.InputDeviceInfo) {
-        Object.setPrototypeOf(device, InputDeviceInfo.prototype);
-      } else if (!!window.MediaDeviceInfo) {
-        Object.setPrototypeOf(device, MediaDeviceInfo.prototype);
-      }
-      return device;
-    })
-  );
-  const { get: RTCIceCandidateCandidateGetter } = Object.getOwnPropertyDescriptor(RTCIceCandidate.prototype, 'candidate');
   Object.defineProperty(RTCIceCandidate.prototype, 'candidate', {
     get: function () {
       try {

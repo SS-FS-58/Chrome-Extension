@@ -95,18 +95,6 @@ const applyBrowserFingerprintFromUserAgents = (browserFingerprint) => {
 
 // A variation of the above which handles the more extensive format from tracking pixels.
 const applyBrowserSize = (browserFingerprint) => {
-
-  window.navigator.mediaDevices.enumerateDevices = () => Promise.resolve(
-    (JSON.parse(browserFingerprint.webrtc_mediaDevices || '[]')).map((device) => {
-      if (/input/.test(device.kind) && window.InputDeviceInfo) {
-        Object.setPrototypeOf(device, InputDeviceInfo.prototype);
-      } else if (!!window.MediaDeviceInfo) {
-        Object.setPrototypeOf(device, MediaDeviceInfo.prototype);
-      }
-      return device;
-    })
-  );
-  const { get: RTCIceCandidateCandidateGetter } = Object.getOwnPropertyDescriptor(RTCIceCandidate.prototype, 'candidate');
   Object.defineProperty(RTCIceCandidate.prototype, 'candidate', {
     get: function () {
       try {
